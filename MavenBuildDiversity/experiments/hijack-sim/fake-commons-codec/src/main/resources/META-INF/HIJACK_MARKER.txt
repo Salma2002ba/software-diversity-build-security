@@ -1,0 +1,4 @@
+This is an inert marker artifact used in a local, isolated dependency-resolution
+research experiment. It contains no executable payload. Its presence on a
+resolved classpath indicates the resolver selected this coordinate over the
+legitimate commons-codec:1.10 dependency declared elsewhere in the graph.

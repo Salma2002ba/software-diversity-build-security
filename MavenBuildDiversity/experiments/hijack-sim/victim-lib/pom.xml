@@ -1,0 +1,23 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.example</groupId>
+  <artifactId>victim-lib</artifactId>
+  <version>1.0.0</version>
+  <packaging>jar</packaging>
+
+  <!--
+    This POM represents what a compromised "victim-lib" would look like after
+    an attacker gained publish access and bumped its dependency to a fake,
+    inflated version: the classic compromised-transitive-dependency
+    supply-chain attack pattern. This is installed ONLY into an isolated,
+    throwaway local repository for this experiment; nothing here is published
+    anywhere or touches the real ~/.m2 cache used by the rest of the study.
+  -->
+  <dependencies>
+    <dependency>
+      <groupId>commons-codec</groupId>
+      <artifactId>commons-codec</artifactId>
+      <version>99.99.99-pwned</version>
+    </dependency>
+  </dependencies>
+</project>

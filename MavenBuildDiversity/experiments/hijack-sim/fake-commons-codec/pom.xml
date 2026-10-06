@@ -1,0 +1,16 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>commons-codec</groupId>
+  <artifactId>commons-codec</artifactId>
+  <version>99.99.99-pwned</version>
+  <packaging>jar</packaging>
+  <!--
+    An INERT, non-functional marker artifact standing in for what a hijacked
+    package would look like at the coordinate level. It contains no
+    executable payload, no obfuscation, and does nothing beyond exposing a
+    marker resource file. The point of this experiment is to observe
+    whether Maven's resolver selects this coordinate over the legitimate
+    one under different strategies, not to demonstrate an actual exploit.
+    Installed only into an isolated, throwaway local repository.
+  -->
+</project>

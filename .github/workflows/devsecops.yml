@@ -1,0 +1,120 @@
+name: devsecops
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  # Weekly rescan: new CVEs are published even when the code does not change.
+  schedule:
+    - cron: "23 6 * * 1"
+  workflow_dispatch:
+
+# Least privilege: every job only gets read access to the repository.
+permissions:
+  contents: read
+
+concurrency:
+  group: devsecops-${{ github.ref }}
+  cancel-in-progress: true
+
+# Third-party actions are pinned to a commit SHA (a tag can be moved),
+# and tool images to a digest: every run uses exactly the same bytes.
+env:
+  GITLEAKS_IMAGE: zricethezav/gitleaks@sha256:c00b6bd0aeb3071cbcb79009cb16a60dd9e0a7c60e2be9ab65d25e6bc8abbb7f # v8.30.1
+  SHELLCHECK_IMAGE: koalaman/shellcheck@sha256:bb596a0d169b85ddd81d8b6d3a2ff6d5baf5fca10b97f575ebc647c3dff62b3d # v0.11.0
+  RUFF_IMAGE: ghcr.io/astral-sh/ruff@sha256:e1675e92fe4d38ce10ab6cabaf4ab20f209b84433b789cfd1b683c028aa391e2 # 0.16.10
+  SYFT_IMAGE: anchore/syft@sha256:0356562f495d432056237fbea5cbc2d4839c9c75cd500784a66de2e7cc95ca7c # v1.54.0
+  GRYPE_IMAGE: anchore/grype@sha256:5c88961f4130e830542d441c7ed6c78baa28e799163abac53d2be4923fb5ab7d # v0.120.0
+
+jobs:
+  secrets:
+    name: Secrets (Gitleaks)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0 # full history: a deleted secret still lives in older commits
+          persist-credentials: false
+
+      - name: Scan the Git history
+        run: docker run --rm -v "$PWD":/repo "$GITLEAKS_IMAGE" git /repo --no-banner --redact
+
+  lint:
+    name: Script quality (ShellCheck, Ruff)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: ShellCheck (errors are blocking)
+        run: |
+          mapfile -t scripts < <(git ls-files '*.sh')
+          docker run --rm -v "$PWD":/mnt -w /mnt "$SHELLCHECK_IMAGE" -S error "${scripts[@]}"
+
+      - name: Ruff (syntax errors and undefined names)
+        run: docker run --rm -v "$PWD":/io -w /io "$RUFF_IMAGE" check --select E9,F63,F7,F82 --output-format github .
+
+  migration:
+    name: Maven to Gradle migration (smoke test)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.13"
+
+      - name: Generate build.gradle.kts from the sample pom.xml
+        run: |
+          out="$RUNNER_TEMP/build.gradle.kts"
+          python Maven2Gradle_MigrationPython/migrate_pom_to_gradle.py \
+            Maven2Gradle_MigrationPython/helloxrd/pom.xml "$out"
+          test -s "$out"
+          grep -q 'testImplementation' "$out"
+          echo "Generated file: $(wc -l < "$out") lines"
+
+  supply-chain:
+    name: SBOM (Syft) and vulnerabilities (Grype)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: CycloneDX SBOM of the repository
+        run: |
+          mkdir -p build
+          docker run --rm -v "$PWD":/src "$SYFT_IMAGE" dir:/src -q \
+            -o cyclonedx-json=/src/build/sbom.cdx.json
+          echo "Components inventoried: $(jq '.components | length' build/sbom.cdx.json)"
+
+      - name: Grype scan of the SBOM
+        # Report mode: the repository deliberately keeps the historical MyBatis
+        # dependencies studied in 2025. The result is published, it does not block the build.
+        run: |
+          docker run --rm -v "$PWD":/src "$GRYPE_IMAGE" sbom:/src/build/sbom.cdx.json -q \
+            -o table -o json=/src/build/grype.json | tee build/grype.txt
+          {
+            echo "## Vulnerabilities found by Grype"
+            echo
+            echo "| Severity | Count |"
+            echo "|---|---|"
+            jq -r '[.matches[].vulnerability.severity] | group_by(.) | map("| \(.[0]) | \(length) |") | .[]' build/grype.json
+            echo
+            echo "Full details in the \`supply-chain-report\` artifact."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload the reports
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: supply-chain-report
+          path: build/
+          retention-days: 30

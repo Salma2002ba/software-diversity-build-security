@@ -1,0 +1,15 @@
+# Regenerable build artifacts
+*.jar
+!**/gradle/wrapper/gradle-wrapper.jar
+!MavenBuildDiversity/experiments/jpms-verify/*.jar
+*.class
+**/bin/
+**/build/
+**/target/
+**/*-extracted/
+output/
+
+# IDE
+.idea/
+*.iml
+.vscode/

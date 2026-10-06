@@ -1,0 +1,23 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.example</groupId>
+  <artifactId>innocuous-lib</artifactId>
+  <version>1.0.0</version>
+  <packaging>jar</packaging>
+
+  <!--
+    An ordinary, never-compromised library that happens to share a transitive
+    dependency (commons-codec) with victim-lib. commons-codec is only pulled
+    in transitively through this and victim-lib, never declared directly by
+    consumer. This is the diamond shape where Maven's direct-dependency-
+    always-wins rule does not apply, so nearest-wins vs highest-wins can
+    actually diverge.
+  -->
+  <dependencies>
+    <dependency>
+      <groupId>commons-codec</groupId>
+      <artifactId>commons-codec</artifactId>
+      <version>1.10</version>
+    </dependency>
+  </dependencies>
+</project>

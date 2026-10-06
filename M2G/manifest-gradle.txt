@@ -1,0 +1,31 @@
+Manifest-Version: 1.0
+Created-By: Maven JAR Plugin 3.4.2
+Build-Jdk-Spec: 17
+Specification-Title: mybatis
+Specification-Version: 3.6.0
+Specification-Vendor: MyBatis.org
+Implementation-Title: mybatis
+Implementation-Version: 3.6.0-SNAPSHOT
+Implementation-Vendor: MyBatis.org
+Automatic-Module-Name: org.mybatis
+Git-Revision: unknown
+X-Compile-Release-JDK: 11
+X-Compile-Source-JDK: 11
+X-Compile-Target-JDK: 11
+Bundle-ManifestVersion: 2
+Bundle-Name: mybatis
+Bundle-Description: The MyBatis SQL mapper framework makes it easier to 
+ use a relational database with object-oriented applications.
+Bundle-DocURL: https://www.mybatis.org/mybatis-3/
+Bundle-License: "The Apache Software License, Version 2.0";link="https:/
+ /www.apache.org/licenses/LICENSE-2.0.txt"
+Bundle-SCM: url="https://github.com/mybatis/mybatis-3",connection="scm:g
+ it:ssh://git@github.com/mybatis/mybatis-3.git",developer-connection="sc
+ m:git:ssh://git@github.com/mybatis/mybatis-3.git",tag=HEAD
+Bundle-SymbolicName: org.mybatis.mybatis
+Bundle-Vendor: MyBatis.org
+Bundle-Version: 3.6.0-SNAPSHOT
+Export-Package: 
+Import-Package: 
+DynamicImport-Package: 
+

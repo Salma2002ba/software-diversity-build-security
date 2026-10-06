@@ -1,0 +1,31 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.example</groupId>
+  <artifactId>consumer</artifactId>
+  <version>1.0.0</version>
+  <packaging>jar</packaging>
+
+  <!--
+    The target project: depends only on two ordinary libraries, neither of
+    which is commons-codec itself. commons-codec is pulled in transitively
+    at the same depth (2) through both paths: innocuous-lib brings the real
+    1.10, victim-lib (compromised) brings the hijacked 99.99.99-pwned.
+    Because neither path is a direct declaration by consumer, Maven's
+    direct-dependency-always-wins rule does not short-circuit the conflict,
+    so which version "wins" is genuinely decided by the active version-
+    selector strategy (nearest vs highest): this is the diamond shape a
+    real dependency-confusion attack exploits.
+  -->
+  <dependencies>
+    <dependency>
+      <groupId>com.example</groupId>
+      <artifactId>innocuous-lib</artifactId>
+      <version>1.0.0</version>
+    </dependency>
+    <dependency>
+      <groupId>com.example</groupId>
+      <artifactId>victim-lib</artifactId>
+      <version>1.0.0</version>
+    </dependency>
+  </dependencies>
+</project>

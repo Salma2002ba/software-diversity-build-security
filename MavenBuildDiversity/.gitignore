@@ -1,0 +1,23 @@
+# Runtime output from re-running the scripts (results/logs/build workspaces).
+# The canonical, committed dataset from the original run lives in data/ --
+# this keeps re-runs from ever risking an overwrite of it.
+output/
+
+# Maven build output, wherever it appears (experiments/, output/, etc.)
+**/target/
+
+# Local isolated Maven repos created by the hijack-simulation scripts
+**/isolated-m2/
+**/isolated-*/
+
+# Never vendor JDK/Maven installs or the external Reproducible Central clone
+jdk-*/
+jdk8u*/
+mvn4/
+mvn-patched/
+reproducible-central/
+
+# OS/editor cruft
+.DS_Store
+Thumbs.db
+*.swp
